@@ -1,0 +1,31 @@
+From da958887428d2d4fc02d762dcb719c230333a06f Mon Sep 17 00:00:00 2001
+From: Rex Shen <mupingshen@gmail.com>
+Date: Tue, 28 Oct 2014 22:04:07 +0800
+Subject: [PATCH 6/8] when board id is pm375, set gpio_hp_det_active_high to 0
+ rather then 1, to avoid notifying the opposite jack plug events
+
+---
+ arch/arm/mach-tegra/board-ardbeg.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-tegra/board-ardbeg.c b/arch/arm/mach-tegra/board-ardbeg.c
+index 28e7fef..3dff989 100644
+--- a/arch/arm/mach-tegra/board-ardbeg.c
++++ b/arch/arm/mach-tegra/board-ardbeg.c
+@@ -409,7 +409,12 @@ static void ardbeg_audio_init(void)
+ 			board_info.board_id == BOARD_PM363) {
+ 		/*Laguna*/
+ 		ardbeg_audio_pdata_rt5639.gpio_hp_det = TEGRA_GPIO_HP_DET;
+-		ardbeg_audio_pdata_rt5639.gpio_hp_det_active_high = 1;
++        if (board_info.board_id == BOARD_PM375) {
++            // by Rex: should be 0, or the kernel will notify insert event when
++            // audio jack plug out, and vice verse.
++            ardbeg_audio_pdata_rt5639.gpio_hp_det_active_high = 0;
++        } else
++            ardbeg_audio_pdata_rt5639.gpio_hp_det_active_high = 1;
+ 		if (board_info.board_id != BOARD_PM363)
+ 			ardbeg_audio_pdata_rt5639.gpio_ldo1_en = -1;
+ 	} else {
+-- 
+1.9.1
+

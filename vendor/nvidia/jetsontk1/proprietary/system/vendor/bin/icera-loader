@@ -1,0 +1,116 @@
+#!/system/bin/sh
+#***********************************************************************************************
+#
+# Copyright (c) 2012-2013, NVIDIA CORPORATION.  All rights reserved.
+#
+#***********************************************************************************************
+
+## Some variables:
+##################
+LOGCAT_TAG="ICEFWDLD"
+LOG_FILE="/data/rfs/data/debug/fw_update.log"
+FW_PATH="/system/vendor/firmware/app"
+CFG_PATH="/system/vendor/firmware/data/config"
+UPDATE_FILE_LIST="/data/rfs/data/debug/update_list"
+FILE_LIST=""
+
+## Some functions:
+##################
+ALOGI() {
+    /system/bin/log -p i -t ${LOGCAT_TAG} "$1"
+}
+
+ALOGE() {
+    /system/bin/log -p e -t ${LOGCAT_TAG} "$1"
+}
+
+ALOGD() {
+    /system/bin/log -p d -t ${LOGCAT_TAG} "$1"
+}
+
+UpdateFileList()
+{
+    list="$(ls ${1})"
+    for file in ${list}
+    do
+        if [ -n "${FILE_LIST}" ]; then
+            FILE_LIST="${FILE_LIST};${1}/${file}"
+        else
+            FILE_LIST="${1}/$file"
+        fi
+    done
+}
+
+## Script starts here:
+######################
+
+if [ $2 ]; then
+    # Script started manually.
+    # All files for an update pushed in "$2" folder:
+    UpdateFileList $2
+else
+    # Script started as a service
+    FILE_LIST=`cat ${UPDATE_FILE_LIST}`
+fi
+
+if [ -z "${FILE_LIST}" ]; then
+    ALOGI "$0: No file to update"
+else
+    #Stop the CPO and RIL to not interfere with modem firwmare upgrade
+    stop icera-switcher
+    stop ril-daemon
+    sleep 2
+
+    #Delete previous update log
+    rm ${LOG_FILE}
+
+    #Get the device path only if there is something to update and check it is valid
+    dev_name=$1
+    #check that the device really exists
+    ls $dev_name
+    found=0
+    if [ $? -eq  0 ]; then
+        ALOGD "$0: device name:   $dev_name"
+        found=1
+    else
+        #This script may have been started too early before the modem enumerates.
+        #let few time before trying again. If still not there cancel update
+        ALOGI "$0: $dev_name not found will check every second if available"
+        counter=30
+        while [ $counter -gt 0 ]
+        do
+            counter=`expr $counter - 1`
+            sleep 1
+            ls $dev_name
+            if [ $? -eq  0 ]; then
+                ALOGD "$0: $dev_name now available"
+                found=1
+                break
+            else
+                ALOGE "$0: device $dev_name not found"
+            fi
+        done
+    fi
+
+    if [ $found -eq 1 ]; then
+        #execute the downloader and store output
+        ALOGI "Update file list: ${FILE_LIST}"
+        downloader -d $dev_name -f "$FILE_LIST" > ${LOG_FILE}
+
+        #get the return error core
+        err=$?
+        if [ $err -eq 0 ]; then
+            #update is sucessful
+            ALOGI "$0: SUCCESS"
+        else
+            ALOGE "$0: downloader ERROR";
+            # in case of error, we may stay in loader mode, force swithc back to modem mode:
+            echo "AT%MODE=0\r\n" > $dev_name
+        fi
+        ALOGI "$0: log stored under ${LOG_FILE}"
+    fi
+
+    #restart the RIL and CPO even if download failed. Modem will continue using previous firmware
+    start icera-switcher
+    start ril-daemon
+fi

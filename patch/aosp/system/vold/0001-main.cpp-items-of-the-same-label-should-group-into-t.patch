@@ -1,0 +1,50 @@
+From 00710c1a053ffeec8f7595b12b55f95e71521deb Mon Sep 17 00:00:00 2001
+From: Rex Shen <mupingshen@gmail.com>
+Date: Tue, 21 Oct 2014 17:00:58 +0800
+Subject: [PATCH] main.cpp: items of the same label should group into the same
+ DirectVolume, rather than create new ones
+
+---
+ main.cpp | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/main.cpp b/main.cpp
+index d4b7d28..d7c1d95 100644
+--- a/main.cpp
++++ b/main.cpp
+@@ -172,6 +172,7 @@ static int process_config(VolumeManager *vm)
+     for (i = 0; i < fstab->num_entries; i++) {
+         if (fs_mgr_is_voldmanaged(&fstab->recs[i])) {
+             DirectVolume *dv = NULL;
++            bool new_dv_flag = false;
+             flags = 0;
+ 
+             /* Set any flags that might be set for this volume */
+@@ -186,15 +187,22 @@ static int process_config(VolumeManager *vm)
+                 !strcmp(fstab->recs[i].fs_type, "vfat")) {
+                 flags |= VOL_PROVIDES_ASEC;
+             }
+-            dv = new DirectVolume(vm, &(fstab->recs[i]), flags);
++            dv = (DirectVolume*)(vm->lookupVolume(fstab->recs[i].label));
++            if (dv == NULL) {
++                dv = new DirectVolume(vm, &(fstab->recs[i]), flags);
++                new_dv_flag = true;
++            }
+ 
+             if (dv->addPath(fstab->recs[i].blk_device)) {
+                 SLOGE("Failed to add devpath %s to volume %s",
+                       fstab->recs[i].blk_device, fstab->recs[i].label);
++                if (new_dv_flag)
++                    delete dv;
+                 goto out_fail;
+             }
+ 
+-            vm->addVolume(dv);
++            if (new_dv_flag)
++                vm->addVolume(dv);
+         }
+     }
+ 
+-- 
+1.9.1
+

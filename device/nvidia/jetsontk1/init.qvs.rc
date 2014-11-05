@@ -1,0 +1,19 @@
+# For use by QVS automation
+
+service qvs_post_boot /system/xbin/qvs_post_boot.sh
+	oneshot
+	user root
+	disabled
+
+service boot_script /data/boot_script.sh
+	oneshot
+	user root
+	disabled
+
+on boot
+	write /dev/kmsg KERNEL_INIT_COMPLETE
+
+on property:sys.boot_completed=1
+	write /dev/kmsg BOOT_COMPLETE
+	start qvs_post_boot
+	start boot_script

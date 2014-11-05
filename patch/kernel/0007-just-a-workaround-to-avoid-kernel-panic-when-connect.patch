@@ -1,0 +1,31 @@
+From 5df25d50362a411f02cb8ba89270f04589efe64f Mon Sep 17 00:00:00 2001
+From: Rex Shen <mupingshen@gmail.com>
+Date: Wed, 5 Nov 2014 18:40:01 +0800
+Subject: [PATCH 7/8] just a workaround to avoid kernel panic when connecting
+ to l2tp vpn
+
+---
+ arch/arm/mm/dma-mapping.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+index 3369576..96f2154 100644
+--- a/arch/arm/mm/dma-mapping.c
++++ b/arch/arm/mm/dma-mapping.c
+@@ -1209,8 +1209,11 @@ static size_t pg_iommu_unmap(struct iommu_domain *domain,
+ 		phys_addr_t phys_addr;
+ 
+ 		phys_addr = iommu_iova_to_phys(domain, iova + len);
+-		BUG_ON(phys_addr != iova_gap_phys);
+-		iommu_unmap(domain, iova + len, PF_PAGES_SIZE);
++                // printk("domain: %p, phys_addr: %x, iova: %lx, len: %lu\n", domain, phys_addr, iova, len);
++                if (phys_addr != 0) {
++                  BUG_ON(phys_addr != iova_gap_phys);
++                  iommu_unmap(domain, iova + len, PF_PAGES_SIZE);
++                }
+ 	}
+ 
+ 	return iommu_unmap(domain, iova, len);
+-- 
+1.9.1
+
