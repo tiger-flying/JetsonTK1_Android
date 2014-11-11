@@ -20,9 +20,9 @@ How to Flash the Images
 Known Issues
 -----------------
 * no hdmi audio output in some resolutions
-* auido playback will stop when lose focus
-* PPTV Android pad: no audio output when switch to full screen
-* can't support background audio playback
+* ~~auido playback will stop when lose focus~~
+* ~~PPTV Android pad: no audio output when switch to full screen~~
+* ~~can't support background audio playback~~
 * when playing, only two volume value supported: either 0 or max
 * QQ music: the sound becomes vibrato after playing a while
 * kernel panic while connecting to l2tp vpn
