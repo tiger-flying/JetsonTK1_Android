@@ -1,0 +1,26 @@
+From 749ade55fb781b8d3b19062ce15fb8e77e0ac0f9 Mon Sep 17 00:00:00 2001
+From: Rex Shen <mupingshen@gmail.com>
+Date: Mon, 17 Nov 2014 09:40:58 +0800
+Subject: [PATCH] do not treat HDMI output(DEVICE_OUT_AUX_DIGITAL) as fixed
+ volume device
+
+---
+ media/java/android/media/AudioService.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/media/java/android/media/AudioService.java b/media/java/android/media/AudioService.java
+index 92474df..37bb68f 100644
+--- a/media/java/android/media/AudioService.java
++++ b/media/java/android/media/AudioService.java
+@@ -432,7 +432,7 @@ public class AudioService extends IAudioService.Stub {
+     public final static int STREAM_REMOTE_MUSIC = -200;
+ 
+     // Devices for which the volume is fixed and VolumePanel slider should be disabled
+-    final int mFixedVolumeDevices = AudioSystem.DEVICE_OUT_AUX_DIGITAL |
++    final int mFixedVolumeDevices = /*AudioSystem.DEVICE_OUT_AUX_DIGITAL |*/
+             AudioSystem.DEVICE_OUT_DGTL_DOCK_HEADSET |
+             AudioSystem.DEVICE_OUT_ANLG_DOCK_HEADSET |
+             AudioSystem.DEVICE_OUT_ALL_USB;
+-- 
+1.9.1
+

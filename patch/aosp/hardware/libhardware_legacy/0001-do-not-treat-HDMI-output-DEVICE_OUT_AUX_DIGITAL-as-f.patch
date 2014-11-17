@@ -1,0 +1,26 @@
+From 8f17fb44aa4c74b880c281f92e6ea1aedf8a9cd2 Mon Sep 17 00:00:00 2001
+From: Rex Shen <mupingshen@gmail.com>
+Date: Mon, 17 Nov 2014 09:41:43 +0800
+Subject: [PATCH] do not treat HDMI output(DEVICE_OUT_AUX_DIGITAL) as fixed
+ volume device
+
+---
+ audio/AudioPolicyManagerBase.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/audio/AudioPolicyManagerBase.cpp b/audio/AudioPolicyManagerBase.cpp
+index 65e732f..8a55a9a 100644
+--- a/audio/AudioPolicyManagerBase.cpp
++++ b/audio/AudioPolicyManagerBase.cpp
+@@ -3004,7 +3004,7 @@ float AudioPolicyManagerBase::computeVolume(int stream,
+     // if volume is not 0 (not muted), force media volume to max on digital output
+     if (stream == AudioSystem::MUSIC &&
+         index != mStreams[stream].mIndexMin &&
+-        (device == AUDIO_DEVICE_OUT_AUX_DIGITAL ||
++        (/*device == AUDIO_DEVICE_OUT_AUX_DIGITAL ||*/
+          device == AUDIO_DEVICE_OUT_DGTL_DOCK_HEADSET ||
+          device == AUDIO_DEVICE_OUT_USB_ACCESSORY ||
+          device == AUDIO_DEVICE_OUT_USB_DEVICE)) {
+-- 
+1.9.1
+
